@@ -1,65 +1,77 @@
-import { Component } from 'react'
+import { useState, useEffect } from 'react'
 import BookList from './BookList'
 import BookDetail from './BookDetail'
 import { Col, Row, Spinner, Alert } from 'react-bootstrap'
-import { connect } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
 import { getBooksAction } from '../redux/actions'
 
-const mapStateToProps = (state) => ({
-  booksFromRedux: state.book.stock, // the array of books from the store
-  areBooksLoading: state.book.isLoading, // the boolean value holding the loading state
-  errorInFetching: state.book.isError, // the boolean value holding the error state
-})
+// const mapStateToProps = (state) => ({
+//   booksFromRedux: state.book.stock, // the array of books from the store
+//   areBooksLoading: state.book.isLoading, // the boolean value holding the loading state
+//   errorInFetching: state.book.isError, // the boolean value holding the error state
+// })
 
-const mapDispatchToProps = (dispatch) => ({
-  getBooks: () => {
+// const mapDispatchToProps = (dispatch) => ({
+//   getBooks: () => {
+//     dispatch(getBooksAction())
+//   },
+// })
+
+const BookStore = () => {
+  // state = {
+  //   // books: [],
+  //   bookSelected: null,
+  // }
+
+  const [bookSelected, setBookSelected] = useState(null)
+
+  const dispatch = useDispatch()
+
+  useEffect(() => {
+    // getBooks()
     dispatch(getBooksAction())
-  },
-})
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
-class BookStore extends Component {
-  state = {
-    // books: [],
-    bookSelected: null,
-  }
+  const booksFromRedux = useSelector((state) => state.book.stock)
+  const areBooksLoading = useSelector((state) => state.book.isLoading)
+  const errorInFetching = useSelector((state) => state.book.isError)
 
-  componentDidMount = async () => {
-    // in here now I'll not do the fetch inside this component
-    // but instead I'll dispatch the getBooksAction action-creator!
-    // which will fetch the books and then travel towards the reducer
-    this.props.getBooks()
-  }
+  // componentDidMount = async () => {
+  //   // in here now I'll not do the fetch inside this component
+  //   // but instead I'll dispatch the getBooksAction action-creator!
+  //   // which will fetch the books and then travel towards the reducer
+  //   this.props.getBooks()
+  // }
 
-  changeBook = (book) => this.setState({ bookSelected: book })
+  // changeBook = (book) => this.setState({ bookSelected: book })
+  const changeBook = (book) => setBookSelected(book)
 
-  render() {
-    return (
-      <Row>
-        <Col md={4}>
-          {this.props.areBooksLoading ? (
-            <div className="text-center">
-              <Spinner variant="success" animation="border" />
-            </div>
-          ) : this.props.errorInFetching ? (
-            <Alert variant="danger">Error! :(</Alert>
-          ) : (
-            <BookList
-              bookSelected={this.state.bookSelected}
-              changeBook={this.changeBook}
-              // books={this.state.books}
-              books={this.props.booksFromRedux} // empty array to start
-            />
-          )}
-        </Col>
-        <Col md={8}>
-          <BookDetail bookSelected={this.state.bookSelected} />
-        </Col>
-      </Row>
-    )
-  }
+  return (
+    <Row>
+      <Col md={4}>
+        {areBooksLoading ? (
+          <div className="text-center">
+            <Spinner variant="success" animation="border" />
+          </div>
+        ) : errorInFetching ? (
+          <Alert variant="danger">Error! :(</Alert>
+        ) : (
+          <BookList
+            bookSelected={bookSelected}
+            changeBook={changeBook}
+            books={booksFromRedux} // empty array to start
+          />
+        )}
+      </Col>
+      <Col md={8}>
+        <BookDetail bookSelected={bookSelected} />
+      </Col>
+    </Row>
+  )
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(BookStore)
+export default BookStore
 // mapStateToProps in here is needed to retrieve state.book.stock, the array
 // that now holds the available books
 // mapDispatchToProps in here is needed to dispatch getBooksAction in the mounting phase,
